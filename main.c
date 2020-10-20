@@ -1,7 +1,7 @@
 //
 // Nome: Arthur Land Avila
-// Versão: 0.8
-// Data: 2020 09 25
+// Versão: 1.1
+// Data: 2020 10 20
 //
 
 #include <stdio.h>
@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     int tom_de_cinza;
     int tom_de_cinza_medio;
     int tom_cinza_faixa;
+    int num_pixels;
 
     // Gradiente de caracteres
     char mapa_caracters[9];
@@ -119,7 +120,7 @@ int main(int argc, char** argv)
     //}
     //printf("\n");
 
-    // Converte imagem para tons de cinza usando a formula sugeria
+    // Converte imagem para tons de cinza usando a formula sugerida
     printf("Converte imagem para tons de cinza:\n");
     for(int i=0; i<tamanho_linear_imagem_reduzida; i++) {
         aux1 = small_pic.img[i];
@@ -143,21 +144,12 @@ int main(int argc, char** argv)
     }
     printf("\n");
 
-    
-    //printf("Imagem original em cinza:\n");
-    //for (int l=0; l<small_pic.height; l+=5){
-    //    for (int c=0; c<small_pic.width; c+=4) {
-    //        printf("[%02X]", small_pic.img[c+(l*small_pic.width)].r);
-    //    }
-    //    printf("\n");
-    //}
-    //printf("\n");
 
     // Copia imagem de small_pic para char_pic
     char_pic = small_pic;
 
     // Imprime alguns conjuntos de pixels 4x5 que serão convertidos para caracteres
-    printf("Mostra alguns onjuntos de pixels 4x5:\n");
+    printf("Mostra alguns conjuntos de pixels 4x5:\n");
     for (int l=0; l<10; l++){
         for (int c=0; c<8; c++) {
             printf("[%02X %02X %02X] ", small_pic.img[c+(l*small_pic.width)].r, small_pic.img[c+(l*small_pic.width)].g, small_pic.img[c+(l*small_pic.width)].b);            
@@ -170,18 +162,26 @@ int main(int argc, char** argv)
     for (int l=0; l<small_pic.height; l+=5){
         for (int c=0; c<small_pic.width; c+=4) {
             tom_de_cinza_medio = 0;
+            num_pixels = 0;
             for(int l1=l; l1<l+5; l1++) {
-                for (int c1=c; c1<c+4; c1++) {
-                    // Soma todos os tons de cinza do quadrado 4x5
-                    tom_de_cinza_medio += small_pic.img[c1+(l1*small_pic.width)].r;
+                if (l1<small_pic.height) {
+                  for (int c1=c; c1<c+4; c1++) {
+                      if (c1<small_pic.width) {
+                        // Soma todos os tons de cinza do quadrado 4x5
+                        tom_de_cinza_medio += small_pic.img[c1+(l1*small_pic.width)].r;
+                        num_pixels++;
+                      }
+                  }
                 }
             }
             // Calcula o cinza médio do quadrado 4x5 (20 pixels)
-            tom_de_cinza_medio = tom_de_cinza_medio/20;
+            tom_de_cinza_medio = tom_de_cinza_medio/num_pixels;
             // Calcula o gradiente/faixa do cinza (256 tons de cinza / 8 caracteres_ou_faixas = 32)
             tom_cinza_faixa = tom_de_cinza_medio/32;
             // Coloca o gradiente/faixa na posição 1x1 do quadrado 4x5
-            char_pic.img[c+(l*small_pic.width)].r = tom_cinza_faixa;
+            if (c+(l*small_pic.width) < tamanho_linear_imagem_reduzida) {
+              char_pic.img[c+(l*small_pic.width)].r = tom_cinza_faixa;
+            }
         }
     }
 
@@ -216,12 +216,65 @@ int main(int argc, char** argv)
 
     // Imprime a imagem em caracters 4x5 - hora da verdade :-)
     printf("Imprime a imagem em caracteres:\n");
+    printf("\n");
+
+    printf("<html><head>ASCII Art</head>\n");
+    printf("<body style='background: black;' leftmargin=0 topmargin=0>\n");
+    printf("<style>\n");
+    printf("pre  {\n");
+    printf("         color: white;\n");
+    printf("   font-family: Courier;\n");
+    printf("   font-size: 8px;\n");
+    printf("}\n");
+    printf("</style>\n");
+    printf("<pre>\n");
+
     for (int l=0; l<small_pic.height; l+=5){
         for (int c=0; c<small_pic.width; c+=4) {
             printf("%c", mapa_caracters[char_pic.img[c+(l*small_pic.width)].r]);
         }
         printf("\n");
     }
+
+    printf("</pre>\n");
+    printf("</body>\n");
+    printf("</html>\n");
+
+    // Escreve saida no arquivo html
+
+    // Arquivo de saída
+    FILE* arq = fopen("asciiart.html", "w");
+
+    if (arq == NULL)
+    {
+        printf("Erro abrindo arquivo de saida");
+        exit(1);
+    }
+
+
+    fprintf(arq, "<html><head>ASCII Art</head>\n");
+    fprintf(arq, "<body style='background: black;' leftmargin=0 topmargin=0>\n");
+    fprintf(arq, "<style>\n");
+    fprintf(arq, "pre  {\n");
+    fprintf(arq, "         color: white;\n");
+    fprintf(arq, "   font-family: Courier;\n");
+    fprintf(arq, "   font-size: 8px;\n");
+    fprintf(arq, "}\n");
+    fprintf(arq, "</style>\n");
+    fprintf(arq, "<pre>\n");
+
+    for (int l=0; l<small_pic.height; l+=5){
+        for (int c=0; c<small_pic.width; c+=4) {
+            fprintf(arq, "%c", mapa_caracters[char_pic.img[c+(l*small_pic.width)].r]);
+        }
+        fprintf(arq, "\n");
+    }
+
+    fprintf(arq, "</pre>\n");
+    fprintf(arq, "</body>\n");
+    fprintf(arq, "</html>\n");
+
+    fclose(arq);
 
     // Libera memoria
     free(pic.img);
